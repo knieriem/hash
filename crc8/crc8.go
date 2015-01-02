@@ -16,6 +16,8 @@ const Size = 1
 const (
 	// CRC-8-Dallas/Maxim, reversed polynomial of 0x31
 	DOWCRC = 0x8C
+
+	CCITT = 0xE0	// reversed polynomial of 0x07
 )
 
 // Table is a 256-word table representing the polynomial for efficient processing.
