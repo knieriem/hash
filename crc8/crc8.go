@@ -6,7 +6,8 @@ package crc8
 
 import (
 	"sync"
-	"te/hash"
+
+	"github.com/knieriem/hash"
 )
 
 // The size of a CRC-8 checksum in bytes.

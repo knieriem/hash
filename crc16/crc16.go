@@ -6,7 +6,8 @@ package crc16
 
 import (
 	"sync"
-	"te/hash"
+
+	"github.com/knieriem/hash"
 )
 
 // The size of a CRC-16 checksum in bytes.
