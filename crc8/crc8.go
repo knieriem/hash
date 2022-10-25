@@ -5,8 +5,7 @@
 package crc8
 
 import (
-	"sync"
-
+	"github.com/knieriem/crcutil/crc8"
 	"github.com/knieriem/hash"
 )
 
@@ -14,94 +13,44 @@ import (
 const Size = 1
 
 // Predefined polynomials.
-const (
-	// CRC-8-Dallas/Maxim, reversed polynomial of 0x31
-	DOWCRC = 0x8C
-
-	CCITT = 0xE0 // reversed polynomial of 0x07
+var (
+	DOWCRC = crc8.DOW
 )
 
-// Table is a 256-word table representing the polynomial for efficient processing.
-type Table [256]uint8
+type Model = crc8.Model
 
-var dowcrcTable *Table
-var dowcrcOnce sync.Once
-
-func dowcrcInit() {
-	dowcrcTable = makeTable(DOWCRC)
+// MakeTable used to create a Table constructed from a specified polynomial.
+//
+// Deprecated: Now it just returns the provided Model to keep the package's API compatible.
+func MakeTable(m *Model) *Model {
+	return m
 }
 
-// MakeTable returns the Table constructed from the specified polynomial.
-func MakeTable(poly uint8) *Table {
-	switch poly {
-	case DOWCRC:
-		dowcrcOnce.Do(dowcrcInit)
-		return dowcrcTable
-	}
-	return makeTable(poly)
-}
-
-// makeTable returns the Table constructed from the specified polynomial.
-func makeTable(poly uint8) *Table {
-	t := new(Table)
-	for i := 0; i < 256; i++ {
-		crc := uint8(i)
-		for j := 0; j < 8; j++ {
-			if crc&1 == 1 {
-				crc = (crc >> 1) ^ poly
-			} else {
-				crc >>= 1
-			}
-		}
-		t[i] = crc
-	}
-	return t
+// New creates a new hash.Hash8 computing the CRC-8 checksum
+// using the polynomial represented by the Model.
+func New(m *Model) hash.Hash8 {
+	return &digest{Inst: m.New()}
 }
 
 // digest represents the partial evaluation of a checksum.
 type digest struct {
-	crc uint8
-	tab *Table
+	*crc8.Inst
 }
-
-// New creates a new hash.Hash8 computing the CRC-8 checksum
-// using the polynomial represented by the Table.
-func New(tab *Table) hash.Hash8 { return &digest{0, tab} }
 
 func (d *digest) Size() int { return Size }
 
 func (d *digest) BlockSize() int { return 1 }
 
-func (d *digest) Reset() { d.crc = 0 }
-
-func update(crc uint8, tab *Table, p []byte) uint8 {
-	for _, v := range p {
-		crc = tab[byte(crc)^v]
-	}
-	return crc
-}
-
-// Update returns the result of adding the bytes in p to the crc.
-func Update(crc uint8, tab *Table, p []byte) uint8 {
-	return update(crc, tab, p)
-}
-
-func (d *digest) Write(p []byte) (n int, err error) {
-	d.crc = Update(d.crc, d.tab, p)
-	return len(p), nil
-}
-
 func (d *digest) Sum8() uint8 {
-	return d.crc
+	return d.Inst.Sum()
 }
 
 func (d *digest) Sum(in []byte) []byte {
-	return append(in, d.Sum8())
+	return d.Inst.AppendSum(in)
 }
 
 // Checksum returns the CRC-8 checksum of data
-// using the polynomial represented by the Table.
-func Checksum(data []byte, tab *Table) (crc uint8) {
-	crc = Update(0, tab, data)
-	return crc
+// using the polynomial, and parameters represented by the Model.
+func Checksum(data []byte, m *Model) uint8 {
+	return m.Checksum(data)
 }
