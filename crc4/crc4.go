@@ -1,3 +1,7 @@
+// Package crc4 implements hash.Hash8 for 4-bit CRCs
+//
+// Deprecated: Instead of crc4, package crc8 should be used
+// with polys from github.com/knieriem/crcutil/poly4.
 package crc4
 
 import (
