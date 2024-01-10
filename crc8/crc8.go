@@ -5,6 +5,7 @@
 package crc8
 
 import (
+	"github.com/knieriem/crcutil"
 	"github.com/knieriem/crcutil/crc8"
 	"github.com/knieriem/hash"
 )
@@ -26,10 +27,15 @@ func MakeTable(m *Model) *Model {
 	return m
 }
 
-// New creates a new hash.Hash8 computing the CRC-8 checksum
+// New creates a new [hash.Hash8] computing the CRC-8 checksum
 // using the polynomial represented by the Model.
 func New(m *Model) hash.Hash8 {
 	return &digest{Inst: m.New()}
+}
+
+// NewFromInst creates a [hash.Hash8] from an [crcutil.Inst].
+func NewFromInst(inst *crcutil.Inst[uint8]) hash.Hash8 {
+	return &digest{Inst: inst}
 }
 
 // digest represents the partial evaluation of a checksum.
